@@ -47,7 +47,7 @@
 		<dependency>
 		    <groupId>org.postgresql</groupId>
 		    <artifactId>postgresql</artifactId>
-		    <version>9.1-901-1.jdbc4</version> <!-- ⚠️ Very outdated -->
+		    <version>9.3-1100-jdbc41</version> <!-- ⚠️ Very outdated -->
 		    <scope>runtime</scope>
 		</dependency>
 
