@@ -37,20 +37,20 @@ jobs:
           format: 'table'
           severity: 'HIGH,CRITICAL'
           output: 'trivy-keycloak.txt'
-      - name: Run Trivy on nifi
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'apache/nifi:1.25.0'
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          output: 'trivy-nifi.txt'
-      - name: Run Trivy on istio
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'istio/proxyv2:1.21.0'
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          output: 'trivy-istio.txt'
+      # - name: Run Trivy on nifi
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: 'apache/nifi:1.25.0'
+      #     format: 'table'
+      #     severity: 'HIGH,CRITICAL'
+      #     output: 'trivy-nifi.txt'
+      # - name: Run Trivy on istio
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: 'istio/proxyv2:1.21.0'
+      #     format: 'table'
+      #     severity: 'HIGH,CRITICAL'
+      #     output: 'trivy-istio.txt'
         
  
 
@@ -60,7 +60,4 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
           cat trivy-keycloak.txt >> $GITHUB_STEP_SUMMARY
-          cat trivy-nifi.txt >> $GITHUB_STEP_SUMMARY
-          cat trivy-istio.txt >> $GITHUB_STEP_SUMMARY
-          #cat trivy-wildfly.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
