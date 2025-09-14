@@ -1,33 +1,38 @@
-name: Jit Code Scans
+# .github/workflows/jit-scan.yml
+
+name: JIT Security Scan (Manual Trigger)
 
 on:
-  push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
-  jit-code-scans:
+  jit-security-scan:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: 📦 Dependency Scan (SCA)
-        uses: jitsecurity-controls/jit-github-action@v1
-        with:
-          security_control: scan-your-code-dependencies
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git
 
-      - name: 🧠 Static Code Scan (SAST)
-        uses: jitsecurity-controls/jit-github-action@v1
-        with:
-          security_control: scan-your-code-for-vulnerabilities
+      - name: Install JIT CLI
+        run: |
+          curl -sSL https://cli.jit.io/install.sh | bash
+          export PATH="$HOME/.jit/bin:$PATH"
+          jit --version
 
-      - name: 🔐 Secrets Scan
-        uses: jitsecurity-controls/jit-github-action@v1
-        with:
-          security_control: scan-for-hardcoded-secrets
+      - name: Authenticate JIT CLI
+        env:
+          JIT_CLIENT_ID: ${{ secrets.JIT_CLIENT_ID }}
+          JIT_SECRET_KEY: ${{ secrets.JIT_SECRET_KEY }}
+        run: |
+          export PATH="$HOME/.jit/bin:$PATH"
+          jit auth login --client-id "$JIT_CLIENT_ID" --secret "$JIT_SECRET_KEY"
 
-      - name: ☁️ IaC Scan
-        uses: jitsecurity-controls/jit-github-action@v1
-        with:
-          security_control: scan-your-infrastructure-as-code
+      - name: Run JIT Scan (SCA + SAST)
+        run: |
+          export PATH="$HOME/.jit/bin:$PATH"
+          jit scan --all --wait
