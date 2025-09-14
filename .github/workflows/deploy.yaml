@@ -37,12 +37,6 @@ jobs:
         id: build
         run: mvn clean install -DskipTests
 
-      - name: 📦 Cache target directory (optional)
-        uses: actions/cache@v3
-        with:
-          path: target
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-
   scan-container:
     name: 🐳 Jit Container Scan (Keycloak)
     runs-on: ubuntu-latest
@@ -61,6 +55,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y curl git
           curl -L https://jit-cli.s3.us-east-1.amazonaws.com/jit-cli/latest/jit-cli-amd64-slim -o jit-cli
           chmod +x jit-cli
+          ./jit-cli --help
 
       - name: 🐳 Pull Keycloak Image
         run: docker pull quay.io/keycloak/keycloak:24.0.2
@@ -91,10 +86,11 @@ jobs:
           sudo apt-get update && sudo apt-get install -y curl git
           curl -L https://jit-cli.s3.us-east-1.amazonaws.com/jit-cli/latest/jit-cli-amd64-slim -o jit-cli
           chmod +x jit-cli
+          ./jit-cli --help
 
       - name: 🔍 Run Jit Code/Dependency Scan
         run: |
-          ./jit-cli code --path . --fail-on-findings --add-to-backlog
+          ./jit-cli scan --path . --fail-on-findings --add-to-backlog
 
       - name: 📝 Print Jit Scan Summary
         run: |
