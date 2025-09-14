@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
 
+    env:
+      JIT_CLIENT_ID: ${{ secrets.JIT_CLIENT_ID }}
+      JIT_SECRET_KEY: ${{ secrets.JIT_SECRET_KEY }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,23 +32,15 @@ jobs:
       - name: Build Java Project
         run: mvn clean install -DskipTests
 
-      # ===============
-      # Install Jit CLI
-      # ===============
       - name: Install Jit CLI
         run: |
           sudo apt-get update && sudo apt-get install -y curl git
           curl -L https://jit-cli.s3.us-east-1.amazonaws.com/jit-cli/latest/jit-cli-amd64-slim -o jit-cli
           chmod +x jit-cli
 
-      # ================================
-      # Run Jit scan on code & container
-      # ================================
       - name: Run Jit Container Scan (for Keycloak image)
         run: |
-          # build (or pull) the Keycloak image
           docker pull quay.io/keycloak/keycloak:24.0.2
-          # Running Jit on the container
           ./jit-cli container \
             --image quay.io/keycloak/keycloak:24.0.2 \
             --tracking-name keycloak-keycloak:24.0.2 \
@@ -53,15 +49,8 @@ jobs:
 
       - name: Run Jit Code/Dependency Scan
         run: |
-          # Environment variables for Jit auth (these must be set as secrets)
-          export JIT_CLIENT_ID=${{ secrets.JIT_CLIENT_ID }}
-          export JIT_SECRET_KEY=${{ secrets.JIT_SECRET_KEY }}
-          # Run Jit on your code directory
           ./jit-cli code --path . --fail-on-findings --add-to-backlog
 
-      # =============================
-      # Summary/Results (optional)
-      # =============================
       - name: Print Jit Scan Summary
         run: |
           echo "## 🔍 Jit Scan Completed" >> $GITHUB_STEP_SUMMARY
