@@ -7,38 +7,36 @@ on:
 
 jobs:
   code-checks:
-    name: 🔍 Code & Dependency Scans
+    name: Code & Dependency Scans
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # 📦 SCA: Dependency Scan
-      - name: 📦 Scan Dependencies (SCA)
-        uses: jitsecurity-controls/jit-github-action@v1
+      - name: Dependency Scan (SCA)
+        uses: jitsecurity-controls/jit-github-action@main
         with:
+          # this must correspond to a valid security control in your Jit settings
           security_control: scan-your-code-dependencies
 
-      # 🧠 SAST: Static Analysis
-      - name: 🧠 Static Code Scan (SAST)
-        uses: jitsecurity-controls/jit-github-action@v1
+      - name: Static Code Scan (SAST)
+        uses: jitsecurity-controls/jit-github-action@main
         with:
           security_control: scan-your-code-for-vulnerabilities
 
-      # 🔐 Secrets Detection
-      - name: 🔐 Secrets Scan
-        uses: jitsecurity-controls/jit-github-action@v1
+      - name: Secrets Scan
+        uses: jitsecurity-controls/jit-github-action@main
         with:
           security_control: scan-for-hardcoded-secrets
 
-      # ☁️ IaC Scan
-      - name: ☁️ IaC Scan
-        uses: jitsecurity-controls/jit-github-action@v1
+      - name: IaC Scan
+        uses: jitsecurity-controls/jit-github-action@main
         with:
           security_control: scan-your-infrastructure-as-code
 
   container-scan:
-    name: 🐳 Container Image Scan
+    name: Container Image Scan
     runs-on: ubuntu-latest
     needs: code-checks
 
@@ -47,18 +45,19 @@ jobs:
       JIT_SECRET_KEY: ${{ secrets.JIT_SECRET_KEY }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: 🛠️ Install Jit CLI
+      - name: Install Jit CLI
         run: |
           sudo apt-get update && sudo apt-get install -y curl git
           curl -L https://jit-cli.s3.us-east-1.amazonaws.com/jit-cli/latest/jit-cli-amd64-slim -o jit-cli
           chmod +x jit-cli
 
-      - name: 🐳 Pull Keycloak Image
+      - name: Pull Keycloak Image
         run: docker pull quay.io/keycloak/keycloak:24.0.2
 
-      - name: 🔍 Run Jit Container Scan
+      - name: Run Jit Container Scan
         run: |
           ./jit-cli container \
             --image quay.io/keycloak/keycloak:24.0.2 \
