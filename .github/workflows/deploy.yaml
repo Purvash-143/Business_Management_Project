@@ -1,66 +1,35 @@
-name: Combined Jit Scans
+# .github/workflows/jit-scan.yml
+
+name: JIT Security Scan (Manual Trigger)
 
 on:
-  push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
-  code-checks:
-    name: Code & Dependency Scans
+  jit-security-scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Dependency Scan (SCA)
-        uses: jitsecurity-controls/jit-github-action@main
+      - name: Set up Python (required for JIT CLI)
+        uses: actions/setup-python@v4
         with:
-          # this must correspond to a valid security control in your Jit settings
-          security_control: scan-your-code-dependencies
+          python-version: '3.x'
 
-      - name: Static Code Scan (SAST)
-        uses: jitsecurity-controls/jit-github-action@main
-        with:
-          security_control: scan-your-code-for-vulnerabilities
-
-      - name: Secrets Scan
-        uses: jitsecurity-controls/jit-github-action@main
-        with:
-          security_control: scan-for-hardcoded-secrets
-
-      - name: IaC Scan
-        uses: jitsecurity-controls/jit-github-action@main
-        with:
-          security_control: scan-your-infrastructure-as-code
-
-  container-scan:
-    name: Container Image Scan
-    runs-on: ubuntu-latest
-    needs: code-checks
-
-    env:
-      JIT_CLIENT_ID: ${{ secrets.JIT_CLIENT_ID }}
-      JIT_SECRET_KEY: ${{ secrets.JIT_SECRET_KEY }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Jit CLI
+      - name: Install JIT CLI
         run: |
-          sudo apt-get update && sudo apt-get install -y curl git
-          curl -L https://jit-cli.s3.us-east-1.amazonaws.com/jit-cli/latest/jit-cli-amd64-slim -o jit-cli
-          chmod +x jit-cli
+          curl -sSL https://cli.jit.io/install.sh | bash
+          echo "$HOME/.jit/bin" >> $GITHUB_PATH
 
-      - name: Pull Keycloak Image
-        run: docker pull quay.io/keycloak/keycloak:24.0.2
-
-      - name: Run Jit Container Scan
+      - name: Authenticate JIT CLI
+        env:
+          JIT_CLIENT_ID: ${{ secrets.JIT_CLIENT_ID }}
+          JIT_SECRET_KEY: ${{ secrets.JIT_SECRET_KEY }}
         run: |
-          ./jit-cli container \
-            --image quay.io/keycloak/keycloak:24.0.2 \
-            --tracking-name keycloak-keycloak:24.0.2 \
-            --fail-on-findings \
-            --add-to-backlog
+          jit auth login --client-id "$JIT_CLIENT_ID" --secret "$JIT_SECRET_KEY"
+
+      - name: Run JIT Scan (SCA + SAST)
+        run: |
+          jit scan --all --wait
