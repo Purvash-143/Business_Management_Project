@@ -16,16 +16,17 @@ jobs:
       - name: Install prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl git
+          sudo apt-get install -y curl git file
 
-      - name: Download and install JIT CLI binary
+      - name: Download and install JIT CLI binary (debug)
         run: |
           mkdir -p $HOME/.jit/bin
-          # Replace this URL with your actual JIT CLI binary URL
-          curl -L -o $HOME/.jit/bin/jit https://github.com/jitsecurity-dev/cli/releases/latest/download/jit-linux
+          curl -L -v --retry 3 --retry-delay 5 -o $HOME/.jit/bin/jit https://github.com/jitsecurity-dev/cli/releases/latest/download/jit-linux || cat $HOME/.jit/bin/jit
+          ls -lh $HOME/.jit/bin/jit
+          file $HOME/.jit/bin/jit || echo "File command failed"
           chmod +x $HOME/.jit/bin/jit
           export PATH="$HOME/.jit/bin:$PATH"
-          jit --version
+          jit --version || echo "jit CLI not found or failed"
 
       - name: Authenticate JIT CLI
         env:
@@ -40,7 +41,7 @@ jobs:
           export PATH="$HOME/.jit/bin:$PATH"
           jit scan --all --wait
 
-      # Optional: Upload scan results if supported (adjust if needed)
+      # Optional: Upload Scan Report (adjust or remove if not supported)
       # - name: Upload Scan Report
       #   if: always()
       #   run: |
