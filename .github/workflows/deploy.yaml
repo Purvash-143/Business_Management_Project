@@ -19,17 +19,16 @@ jobs:
           sudo apt-get install -y curl git file
 
       - name: Download and install JIT CLI binary (debug)
-          run: |
-            mkdir -p $HOME/.jit/bin
-            curl -L -v --retry 3 --retry-delay 5 -o $HOME/.jit/bin/jit https://github.com/jitsecurity-dev/cli/releases/latest/download/jit-linux || cat $HOME/.jit/bin/jit
-            echo "---- Downloaded file head ----"
-            head -20 $HOME/.jit/bin/jit
-            ls -lh $HOME/.jit/bin/jit
-            file $HOME/.jit/bin/jit || echo "File command failed"
-            chmod +x $HOME/.jit/bin/jit
-            export PATH="$HOME/.jit/bin:$PATH"
-            jit --version || echo "jit CLI not found or failed"
-
+        run: |
+          mkdir -p $HOME/.jit/bin
+          curl -L -v --retry 3 --retry-delay 5 -o $HOME/.jit/bin/jit https://github.com/jitsecurity-dev/cli/releases/latest/download/jit-linux || cat $HOME/.jit/bin/jit
+          echo "---- Downloaded file head ----"
+          head -20 $HOME/.jit/bin/jit
+          ls -lh $HOME/.jit/bin/jit
+          file $HOME/.jit/bin/jit || echo "File command failed"
+          chmod +x $HOME/.jit/bin/jit
+          export PATH="$HOME/.jit/bin:$PATH"
+          jit --version || echo "jit CLI not found or failed"
 
       - name: Authenticate JIT CLI
         env:
