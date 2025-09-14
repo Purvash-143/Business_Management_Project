@@ -1,37 +1,54 @@
+# .github/workflows/jit-scan.yml
+
 name: JIT Security Scan (Manual Trigger)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # manual trigger only
 
 jobs:
   jit-security-scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python (required for JIT CLI)
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git   # ensure curl, git present
 
       - name: Install JIT CLI
         run: |
+          # Try downloading the JIT CLI. Adjust URL if needed.
           curl -sSL https://cli.jit.io/install.sh | bash
-          echo "$HOME/.jit/bin" >> $GITHUB_PATH
-          export PATH="$HOME/.jit/bin:$PATH"  # 👈 Ensure JIT is in PATH now
-          jit --version  # 👈 Sanity check
+          # Add JIT CLI bin directory to PATH in this step
+          export PATH="$HOME/.jit/bin:$PATH"
+          # Sanity check
+          jit --version
 
       - name: Authenticate JIT CLI
         env:
           JIT_CLIENT_ID: ${{ secrets.JIT_CLIENT_ID }}
           JIT_SECRET_KEY: ${{ secrets.JIT_SECRET_KEY }}
         run: |
-          export PATH="$HOME/.jit/bin:$PATH"  # 👈 Add to path again
+          export PATH="$HOME/.jit/bin:$PATH"
           jit auth login --client-id "$JIT_CLIENT_ID" --secret "$JIT_SECRET_KEY"
 
       - name: Run JIT Scan (SCA + SAST)
         run: |
-          export PATH="$HOME/.jit/bin:$PATH"  # 👈 Add to path again
+          export PATH="$HOME/.jit/bin:$PATH"
           jit scan --all --wait
+
+      - name: Optional: Upload Scan Report
+        if: always()
+        run: |
+          export PATH="$HOME/.jit/bin:$PATH"
+          jit report > jit-scan-report.txt
+        # then you could upload the artifact if you want
+      - name: Upload Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: jit-scan-report
+          path: jit-scan-report.txt
