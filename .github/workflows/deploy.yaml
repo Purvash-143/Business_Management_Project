@@ -18,9 +18,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y curl git
 
-      - name: Install JIT CLI
+      - name: Download and install JIT CLI binary
         run: |
-          curl -sSL https://cli.jit.io/install.sh | bash
+          mkdir -p $HOME/.jit/bin
+          # Replace this URL with your actual JIT CLI binary URL
+          curl -L -o $HOME/.jit/bin/jit https://github.com/jitsecurity-dev/cli/releases/latest/download/jit-linux
+          chmod +x $HOME/.jit/bin/jit
           export PATH="$HOME/.jit/bin:$PATH"
           jit --version
 
@@ -36,3 +39,17 @@ jobs:
         run: |
           export PATH="$HOME/.jit/bin:$PATH"
           jit scan --all --wait
+
+      # Optional: Upload scan results if supported (adjust if needed)
+      # - name: Upload Scan Report
+      #   if: always()
+      #   run: |
+      #     export PATH="$HOME/.jit/bin:$PATH"
+      #     jit report > jit-scan-report.txt
+      #
+      # - name: Upload Report Artifact
+      #   if: always()
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: jit-scan-report
+      #     path: jit-scan-report.txt
