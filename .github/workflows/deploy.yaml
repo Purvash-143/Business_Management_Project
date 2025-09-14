@@ -28,26 +28,41 @@ jobs:
       - name: Build Java Project
         run: mvn clean install -DskipTests
 
-      # ============================
-      # Jit Integration Starts Here
-      # ============================
+      # ===============
+      # Install Jit CLI
+      # ===============
       - name: Install Jit CLI
         run: |
-          curl -s https://raw.githubusercontent.com/jitsecurity-dev/jit-cli/main/install.sh | bash
-          echo "$HOME/.jit/bin" >> $GITHUB_PATH
+          sudo apt-get update && sudo apt-get install -y curl git
+          curl -L https://jit-cli.s3.us-east-1.amazonaws.com/jit-cli/latest/jit-cli-amd64-slim -o jit-cli
+          chmod +x jit-cli
 
-      - name: Initialize Jit Project (if needed)
+      # ================================
+      # Run Jit scan on code & container
+      # ================================
+      - name: Run Jit Container Scan (for Keycloak image)
         run: |
-          jit init --ci --no-input || echo "Already initialized"
+          # build (or pull) the Keycloak image
+          docker pull quay.io/keycloak/keycloak:24.0.2
+          # Running Jit on the container
+          ./jit-cli container \
+            --image quay.io/keycloak/keycloak:24.0.2 \
+            --tracking-name keycloak-keycloak:24.0.2 \
+            --fail-on-findings \
+            --add-to-backlog
 
-      - name: Run Jit Scan
+      - name: Run Jit Code/Dependency Scan
         run: |
-          jit scan run --ci --project .
+          # Environment variables for Jit auth (these must be set as secrets)
+          export JIT_CLIENT_ID=${{ secrets.JIT_CLIENT_ID }}
+          export JIT_SECRET_KEY=${{ secrets.JIT_SECRET_KEY }}
+          # Run Jit on your code directory
+          ./jit-cli code --path . --fail-on-findings --add-to-backlog
 
-      # ============================
-      # Optional Summary (basic)
-      # ============================
+      # =============================
+      # Summary/Results (optional)
+      # =============================
       - name: Print Jit Scan Summary
         run: |
           echo "## 🔍 Jit Scan Completed" >> $GITHUB_STEP_SUMMARY
-          echo "See full scan results in the Actions logs above."
+          echo "Check logs for findings or failures."
