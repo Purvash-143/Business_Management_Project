@@ -1,9 +1,9 @@
-# .github/workflows/jit-scan.yml
+\# .github/workflows/jit-scan.yml
 
 name: JIT Security Scan (Manual Trigger)
 
 on:
-  workflow_dispatch:   # manual trigger only
+  workflow_dispatch:
 
 jobs:
   jit-security-scan:
@@ -16,15 +16,12 @@ jobs:
       - name: Install prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl git   # ensure curl, git present
+          sudo apt-get install -y curl git
 
       - name: Install JIT CLI
         run: |
-          # Try downloading the JIT CLI. Adjust URL if needed.
           curl -sSL https://cli.jit.io/install.sh | bash
-          # Add JIT CLI bin directory to PATH in this step
           export PATH="$HOME/.jit/bin:$PATH"
-          # Sanity check
           jit --version
 
       - name: Authenticate JIT CLI
@@ -39,16 +36,3 @@ jobs:
         run: |
           export PATH="$HOME/.jit/bin:$PATH"
           jit scan --all --wait
-
-      - name: Optional: Upload Scan Report
-        if: always()
-        run: |
-          export PATH="$HOME/.jit/bin:$PATH"
-          jit report > jit-scan-report.txt
-        # then you could upload the artifact if you want
-      - name: Upload Report Artifact
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: jit-scan-report
-          path: jit-scan-report.txt
