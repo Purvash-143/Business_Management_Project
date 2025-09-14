@@ -1,4 +1,4 @@
-\# .github/workflows/jit-scan.yml
+# .github/workflows/jit-scan.yml
 
 name: JIT Security Scan (Manual Trigger)
 
